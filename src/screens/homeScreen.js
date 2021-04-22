@@ -19,7 +19,7 @@ import Geolocation from '@react-native-community/geolocation';
 import {check, PERMISSIONS, RESULTS, request} from 'react-native-permissions';
 import PushNotification from 'react-native-push-notification';
 import {useSelector, useDispatch} from 'react-redux';
-import { getCurrentCityData, getWeatherData } from "../actions";
+import {getCurrentCityData, getWeatherData} from '../actions';
 
 function HomeScreen({navigation}) {
   const {main, loadingView} = styles;
@@ -41,7 +41,7 @@ function HomeScreen({navigation}) {
 
   useEffect(() => {
     if (error) {
-      console.log('Error', e);
+      console.log('Error', error);
     }
   }, [error]);
 
