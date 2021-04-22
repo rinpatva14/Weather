@@ -7,6 +7,7 @@ import {
   FlatList,
   ActivityIndicator,
   Platform,
+  SafeAreaView,
 } from 'react-native';
 import {
   normalize,
@@ -14,50 +15,59 @@ import {
   widthPercentageToDP,
 } from '../helper/responsiveScreen';
 import {convertKalvinToCelsius} from '../common/function';
-import {getCityList, getCurrentCity} from '../api/apiCall';
 import Geolocation from '@react-native-community/geolocation';
 import {check, PERMISSIONS, RESULTS, request} from 'react-native-permissions';
 import PushNotification from 'react-native-push-notification';
+import {useSelector, useDispatch} from 'react-redux';
+import { getCurrentCityData, getWeatherData } from "../actions";
 
 function HomeScreen({navigation}) {
   const {main, loadingView} = styles;
-  const [loading, setLoading] = useState(true);
   const [weatherData, setWeatherData] = useState(true);
   const [location, setLocation] = useState(null);
+  const dispatch = useDispatch();
+
+  const weatherReducerData = useSelector(state => state.weather.weatherData);
+  const error = useSelector(state => state.weather.error);
+  const loading = useSelector(state => state.weather.loading);
+  const currentCityWeatherData = useSelector(
+    state => state.weather.currentCityData,
+  );
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const data = await getCityList();
-        formatData(data.list);
-      } catch (e) {
-        console.log('Error', e);
-        setLoading(false);
-      }
-    };
+    dispatch(getWeatherData());
     checkLocationPermission();
-    fetchData();
   }, []);
 
   useEffect(() => {
+    if (error) {
+      console.log('Error', e);
+    }
+  }, [error]);
+
+  useEffect(() => {
+    if (weatherReducerData?.list && weatherReducerData?.list?.length > 0) {
+      formatData(weatherReducerData.list);
+    }
+  }, [weatherReducerData]);
+
+  useEffect(() => {
     if (location) {
-      const fetchCurrentCity = async () => {
-        try {
-          const data = await getCurrentCity(
-            location.latitude,
-            location.longitude,
-          );
-          showNotification(
-            convertKalvinToCelsius(data?.main?.temp),
-            data?.weather[0]?.icon,
-          );
-        } catch (e) {
-          console.log('Error', e);
-        }
-      };
-      fetchCurrentCity();
+      dispatch(getCurrentCityData(location.latitude, location.longitude));
     }
   }, [location]);
+
+  useEffect(() => {
+    if (
+      currentCityWeatherData?.main?.temp &&
+      currentCityWeatherData?.weather[0]?.icon
+    ) {
+      showNotification(
+        convertKalvinToCelsius(currentCityWeatherData?.main?.temp),
+        currentCityWeatherData?.weather[0]?.icon,
+      );
+    }
+  }, [currentCityWeatherData]);
 
   function showNotification(temp, icon) {
     PushNotification.removeAllDeliveredNotifications();
@@ -88,7 +98,7 @@ function HomeScreen({navigation}) {
       };
     });
     setWeatherData(fomatedData);
-    setLoading(false);
+    // setLoading(false);
   }
 
   function requestLocationPermission() {
@@ -193,20 +203,22 @@ function HomeScreen({navigation}) {
   }
 
   return (
-    <View style={main}>
-      {loading ? (
-        <View style={loadingView}>
-          <ActivityIndicator size={'large'} />
-        </View>
-      ) : (
-        <FlatList
-          data={weatherData}
-          style={main}
-          renderItem={cityCard}
-          keyExtractor={item => item.id}
-        />
-      )}
-    </View>
+    <SafeAreaView style={main}>
+      <View style={main}>
+        {loading ? (
+          <View style={loadingView}>
+            <ActivityIndicator size={'large'} />
+          </View>
+        ) : (
+          <FlatList
+            data={weatherData}
+            style={main}
+            renderItem={cityCard}
+            keyExtractor={item => item.id}
+          />
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -234,16 +246,19 @@ const styles = StyleSheet.create({
     fontSize: normalize(14),
     fontWeight: '500',
     color: '#222',
+    fontFamily: 'Roboto',
   },
   weatherText: {
     fontSize: normalize(12),
     fontWeight: '400',
     color: '#444',
+    fontFamily: 'Roboto-light',
   },
   degreeText: {
     fontSize: normalize(20),
     fontWeight: '500',
     color: '#111',
+    fontFamily: 'Roboto-Bold',
   },
   loadingView: {
     flex: 1,

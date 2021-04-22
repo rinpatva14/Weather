@@ -1,5 +1,12 @@
 import React, {useLayoutEffect} from 'react';
-import {StyleSheet, Text, View, SafeAreaView, Image} from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  View,
+  SafeAreaView,
+  Image,
+  Platform,
+} from 'react-native';
 import MapView from 'react-native-maps';
 import {normalize, widthPercentageToDP} from '../helper/responsiveScreen';
 
@@ -16,12 +23,14 @@ function HomeScreenDetail({route, navigation}) {
   const item = route.params.item;
 
   useLayoutEffect(() => {
-    navigation.setOptions({
-      headerTitleStyle: {
-        alignSelf: 'center',
-        marginRight: 56,
-      },
-    });
+    if (Platform.OS === 'android') {
+      navigation.setOptions({
+        headerTitleStyle: {
+          alignSelf: 'center',
+          marginRight: 56,
+        },
+      });
+    }
   }, []);
   return (
     <SafeAreaView style={main}>
@@ -69,12 +78,14 @@ const styles = StyleSheet.create({
     fontSize: normalize(12),
     fontWeight: '400',
     color: '#222',
+    fontFamily: 'Roboto-light',
   },
   cityText: {
     marginVertical: 8,
     fontSize: normalize(16),
     fontWeight: '600',
     color: '#111',
+    fontFamily: 'Roboto',
   },
   bottomView: {
     flexDirection: 'row',
@@ -89,6 +100,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#444',
     marginTop: normalize(24),
+    fontFamily: 'Roboto-Bold',
   },
   imageStyle: {
     width: normalize(100),
